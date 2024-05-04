@@ -1,0 +1,49 @@
+name: Rust Build for ARM (Raspberry Pi) and x86-64 (Intel NUC)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        target_arch: [arm, x86_64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Set up cross-compilation tools (for ARM)
+        if: matrix.target_arch == 'arm'
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
+
+      - name: Build for Raspberry Pi (ARM)
+        if: matrix.target_arch == 'arm'
+        run: cargo build --target=armv7-unknown-linux-gnueabihf
+
+      - name: Build for Intel NUC (x86-64)
+        if: matrix.target_arch == 'x86_64'
+        run: cargo build --release
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            if: matrix.target_arch == 'arm'
+            - target/armv7-unknown-linux-gnueabihf/debug/
+            if: matrix.target_arch == 'x86_64'
+            - target/release/
