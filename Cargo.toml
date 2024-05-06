@@ -1,3 +1,5 @@
+cargo-features = ["edition2024"]
+
 [package]
 name = "lcdiagsd_grid"
 version = "0.1.1"
